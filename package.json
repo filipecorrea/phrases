@@ -1,0 +1,21 @@
+{
+  "name": "phrases",
+  "version": "1.0.0",
+  "author": "Filipe Correa <filipecorrea@me.com>",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "lint": "standard --fix",
+    "pretest": "standard",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "gremlin": "^3.4.3"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.1",
+    "standard": "^12.0.1"
+  }
+}
