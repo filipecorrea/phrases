@@ -1,5 +1,7 @@
 const gremlin = require('gremlin')
 
+const DriverRemoteConnection = gremlin.driver.DriverRemoteConnection;
+
 const client = new gremlin.driver.Client(
   'ws://localhost:8182/gremlin',
   {
@@ -7,106 +9,98 @@ const client = new gremlin.driver.Client(
     mimeType: 'application/vnd.gremlin-v2.0+json'
   }
 )
+const traversal = gremlin.process.AnonymousTraversalSource.traversal;
+
+const g = traversal().withRemote(
+                new DriverRemoteConnection('ws://localhost:8182/gremlin'));
+
+const __ = gremlin.process.statics;
+
+const _label = 'word';
+const property = 'name';
+
 
 async function dropGraph () {
   console.log('Dropping graph...')
-  return client
-    .submit('g.V().drop()')
-    .then(result => console.log('Result: %s\n', JSON.stringify(result)))
+  let result = await g.V().drop().iterate();
+  console.log('Result: %s\n', JSON.stringify(result));
 }
 
 async function addVertex (word) {
   console.log('Adding vertex...')
-  return client
-    .submit("g.addV(_label).property('name', name)", {
-      _label: 'word',
-      name: word
-    })
-    .then(result => console.log('Result: %s\n', JSON.stringify(result)))
+  let result = await g.addV(_label).property('name', word).iterate();
+  console.log('Result: %s\n', JSON.stringify(result));
 }
 
 async function listVertices () {
+  const val = 'name';
   console.log('Listing vertices...')
-  return client
-    .submit('g.V().values(val)', {
-      val: 'name'
-    })
-    .then(result => console.log('Result: %s\n', JSON.stringify(result)))
+  let result =  await g.V().values(val).toList();
+  console.log('Result: %s\n', JSON.stringify(result));
 }
 
 async function addEdge (vertice1, vertice2) {
   console.log('Adding edge...')
-  const v1 = await client.submit('g.V().hasLabel(_label).has(xyz, abc)', {
-    _label: 'word',
-    xyz: 'name',
-    abc: vertice1
-  })
-  const v2 = await client.submit('g.V().hasLabel(_label).has(xyz, abc)', {
-    _label: 'word',
-    xyz: 'name',
-    abc: vertice2
-  })
 
-  return client
-    .submit('g.V(source).addE(relationship).to(g.V(target))', {
-      source: v1._items[0].id,
-      relationship: 'connects',
-      target: v2._items[0].id
-    })
-    .then(result => console.log('Result: %s\n', JSON.stringify(result)))
+  let relationship = 'connnects';
+
+  const v1 = await g.V().has(property, vertice1).next();
+  console.log(JSON.stringify(v1));
+  const v2 = await g.V().has(property, vertice2).next();
+  console.log(JSON.stringify(v2));
+
+  let result = await g.V(v1).addE(relationship).to(g.V(v2)).next();
+  console.log('Result: %s\n', JSON.stringify(result));
 }
 
 async function countVertices () {
   console.log('Counting vertices...')
-  return client
-    .submit('g.V().count()', { })
-    .then(result => console.log('Result: %s\n', JSON.stringify(result)))
+  let result = await g.V().count().next();
+  console.log('Result: %s\n', JSON.stringify(result));
 }
 
 async function connections (word) {
-  console.log('Getting connections...')
-  const v1 = await client.submit('g.V().hasLabel(_label).has(xyz, abc)', {
-    _label: 'word',
-    xyz: 'name',
-    abc: word
-  })
+  console.log('Getting connections...');
+  const relationship = 'connects';
 
-  return client
-    .submit('g.V(source).out(relationship)', {
-      source: v1._items[0].id,
-      relationship: 'connects'
-    })
-    .then(result => console.log('Result: %s\n', JSON.stringify(result)))
+  const v1 = await g.V().has(property, word);
+  let result = await g.V(v1).out(relationship).toList();
+
+  console.log('Result: %s\n', JSON.stringify(result));
 }
 
 async function func1 (word) {
   console.log('Func1...')
-  const v1 = await client.submit('g.V().hasLabel(_label).has(xyz, abc)', {
-    _label: 'word',
-    xyz: 'name',
-    abc: word
-  })
 
-  return client
-    .submit('g.V(source).bothE()', {
-      source: v1._items[0].id
-    })
-    .then(result => console.log('Result: %s\n', JSON.stringify(result)))
+  const v1 = await g.V().hasLabel(_label).has(property, word).next();
+  let result = g.V(v1).bothE().toList();
+  console.log('Result: %s\n', JSON.stringify(result));
 }
 
-async function test (word1, word2, word3) {
-  console.log('Testing...')
+async function test (words) {
+  console.log('Testing...');
+  console.log(words[0]);
+  console.log(words[1]);
+  console.log(words[2]);
 
-  return client
-    .submit('g.V().has(\'word\', \'name\', word1).repeat(out().simplePath()).until(has(\'name\', word3)).path().by(\'name\')', {
-      word1,
-      word2,
-      word3
-    })
-    .then(result => {
-      console.log('Result: %s\n', JSON.stringify(result))
-      console.log(result._items)
-    })
+
+  let v1 = await g.V().has('word', 'name', words[0]).next();
+  console.log("Result:" +  JSON.stringify(v1) );
+
+  let pathSecondWord = await g.V(v1)
+                    .repeat(__.out().simplePath()).until(__.has('name', words[1]))
+                    .path().toList();
+
+  console.log("Result:" +  JSON.stringify(pathSecondWord) );
+
+
+  let pathThirdWord = await g.V(v1)
+                    .repeat(__.out().simplePath()).until(__.has('name', words[1]))
+                    .repeat(__.out().simplePath()).until(__.has('name', words[2]))
+                    .path().by('name').toList();
+
+  console.log("Result:" +  JSON.stringify(pathThirdWord) );
+
 }
 
 async function run () {
@@ -148,7 +142,9 @@ async function run () {
 
   await func1('work')
 
-  await test('I', 'work', 'now')
+  //const testArray = ['I', 'work', 'now'];
+  const words = ['I', 'work', 'now'];
+  await test(words);
   /*
   Path {
     labels: [ [], [], [], [], [] ],
