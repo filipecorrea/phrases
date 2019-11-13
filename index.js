@@ -72,20 +72,19 @@ async function func1 (word) {
 
 async function test (words) {
   console.log('Testing...');
-  console.log(words[0]);
-  console.log(words[1]);
-  console.log(words[2]);
-
 
   let v1 = await g.V().has('word', 'name', words[0]).toList();
   console.log("first word:" +  JSON.stringify(v1[0]) );
 
-  let pathThirdWord = await g.V(v1)
-                    .repeat(__.out().simplePath()).until(__.has('name', words[1]))
-                    .repeat(__.out().simplePath()).until(__.has('name', words[2]))
-                    .path().by('name').toList();
+  let path = g.V(v1);
 
-  console.log("Result:" +  pathThirdWord );
+  for (var i = 1; i < words.length; i++) {
+      path = path.repeat(__.out().simplePath()).until(__.has('name', words[i]))
+  }
+
+  const result = await path.path().by('name').toList();
+
+  console.log("Result:" +  result );
 
 }
 
