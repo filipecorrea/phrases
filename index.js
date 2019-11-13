@@ -41,7 +41,7 @@ async function addEdge (vertice1, vertice2) {
   const v2 = await g.V().has(property, vertice2).toList();
   console.log(JSON.stringify(v2));
 
-  let result = await g.V(v1).addE(relationship).to(g.V(v1)).iterate();
+  let result = await g.V(v1).addE(relationship).to(g.V(v2)).iterate();
   console.log('Result: %s\n', JSON.stringify(result));
 }
 
@@ -57,7 +57,7 @@ async function connections (word) {
   console.log('Getting connections...');
   const relationship = 'connects';
 
-  const result = await g.V().has('name', word).out().toList();
+  const result = await g.V().has('name', word).out().values('name').toList();
 
   console.log('Result: %s\n', JSON.stringify(result));
 }
@@ -78,14 +78,7 @@ async function test (words) {
 
 
   let v1 = await g.V().has('word', 'name', words[0]).toList();
-  console.log("Result:" +  JSON.stringify(v1) );
-
-  let pathSecondWord = await g.V(v1)
-                    .repeat(__.out().simplePath()).until(__.has('name', words[1]))
-                    .path().toList();
-
-  console.log("Result:" +  JSON.stringify(pathSecondWord) );
-
+  console.log("first word:" +  JSON.stringify(v1[0]) );
 
   let pathThirdWord = await g.V(v1)
                     .repeat(__.out().simplePath()).until(__.has('name', words[1]))
