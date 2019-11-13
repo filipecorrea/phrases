@@ -37,9 +37,9 @@ async function addEdge (vertice1, vertice2) {
   let relationship = 'connnects';
 
   const v1 = await g.V().has(property, vertice1).toList();
-  console.log(JSON.stringify(v1.value));
+  console.log(JSON.stringify(v1));
   const v2 = await g.V().has(property, vertice2).toList();
-  console.log(JSON.stringify(v2.value));
+  console.log(JSON.stringify(v2));
 
   let result = await g.V(v1).addE(relationship).to(g.V(v1)).iterate();
   console.log('Result: %s\n', JSON.stringify(result));
