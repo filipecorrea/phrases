@@ -12,7 +12,7 @@ const client = new gremlin.driver.Client(
 const traversal = gremlin.process.AnonymousTraversalSource.traversal;
 
 const g = traversal().withRemote(
-                new DriverRemoteConnection('ws://localhost:8182/gremlin'));
+                new DriverRemoteConnection('ws://localhost:8182/gremlin'))
 
 const __ = gremlin.process.statics;
 
