@@ -85,7 +85,7 @@ async function test (words) {
                     .repeat(__.out().simplePath()).until(__.has('name', words[2]))
                     .path().by('name').toList();
 
-  console.log("Result:" +  JSON.stringify(pathThirdWord) );
+  console.log("Result:" +  pathThirdWord );
 
 }
 
