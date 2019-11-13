@@ -2,13 +2,6 @@ const gremlin = require('gremlin')
 
 const DriverRemoteConnection = gremlin.driver.DriverRemoteConnection;
 
-const client = new gremlin.driver.Client(
-  'ws://localhost:8182/gremlin',
-  {
-    traversalsource: 'g',
-    mimeType: 'application/vnd.gremlin-v2.0+json'
-  }
-)
 const traversal = gremlin.process.AnonymousTraversalSource.traversal;
 
 const g = traversal().withRemote(
@@ -41,15 +34,14 @@ async function listVertices () {
 
 async function addEdge (vertice1, vertice2) {
   console.log('Adding edge...')
-
   let relationship = 'connnects';
 
-  const v1 = await g.V().has(property, vertice1).next();
-  console.log(JSON.stringify(v1));
-  const v2 = await g.V().has(property, vertice2).next();
-  console.log(JSON.stringify(v2));
+  const v1 = await g.V().has(property, vertice1).toList();
+  console.log(JSON.stringify(v1.value));
+  const v2 = await g.V().has(property, vertice2).toList();
+  console.log(JSON.stringify(v2.value));
 
-  let result = await g.V(v1).addE(relationship).to(g.V(v2)).next();
+  let result = await g.V(v1).addE(relationship).to(g.V(v1)).iterate();
   console.log('Result: %s\n', JSON.stringify(result));
 }
 
@@ -60,11 +52,12 @@ async function countVertices () {
 }
 
 async function connections (word) {
+
+  console.log(word)
   console.log('Getting connections...');
   const relationship = 'connects';
 
-  const v1 = await g.V().has(property, word);
-  let result = await g.V(v1).out(relationship).toList();
+  const result = await g.V().has('name', word).out().toList();
 
   console.log('Result: %s\n', JSON.stringify(result));
 }
@@ -84,7 +77,7 @@ async function test (words) {
   console.log(words[2]);
 
 
-  let v1 = await g.V().has('word', 'name', words[0]).next();
+  let v1 = await g.V().has('word', 'name', words[0]).toList();
   console.log("Result:" +  JSON.stringify(v1) );
 
   let pathSecondWord = await g.V(v1)
@@ -104,7 +97,6 @@ async function test (words) {
 }
 
 async function run () {
-  await client.open()
 
   await dropGraph()
 
@@ -157,7 +149,6 @@ async function run () {
     objects: [ 'I', 'will', 'ride', 'my', 'bike', 'to', 'work', 'now' ] }
   */
 
-  await client.close()
 }
 
 run()
