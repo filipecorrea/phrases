@@ -1,21 +1,16 @@
 const gremlin = require('gremlin')
+const __ = gremlin.process.statics
 
-const DriverRemoteConnection = gremlin.driver.DriverRemoteConnection;
+const DriverRemoteConnection = gremlin.driver.DriverRemoteConnection
+const traversal = gremlin.process.AnonymousTraversalSource.traversal
+const g = traversal().withRemote(new DriverRemoteConnection('ws://localhost:8182/gremlin'))
 
-const traversal = gremlin.process.AnonymousTraversalSource.traversal;
-
-const g = traversal().withRemote(
-                new DriverRemoteConnection('ws://localhost:8182/gremlin'))
-
-const __ = gremlin.process.statics;
-
-const _label = 'word';
-const property = 'name';
-
+const _label = 'word'
+const property = 'name'
 
 async function dropGraph () {
   await g.V().drop().iterate()
-  console.log('Graph dropped.')
+  console.log('Graph dropped.\n')
 }
 
 async function addVertex (word) {
@@ -46,39 +41,28 @@ async function addEdge (vertice1, vertice2) {
 
 async function connections (word) {
   console.log('Getting connections for %s...', word)
-  // const relationship = 'connects';
   const result = await g.V().has('name', word).out().values('name').toList()
   console.log('Result: %s\n', JSON.stringify(result))
 }
 
-async function func1 (word) {
-  console.log('Func1...')
-
-  const v1 = await g.V().hasLabel(_label).has(property, word).next();
-  let result = g.V(v1).bothE().toList();
-  console.log('Result: %s\n', JSON.stringify(result));
-}
-
 async function test (words) {
-  console.log('Testing...');
+  console.log('Testing...')
 
-  let v1 = await g.V().has('word', 'name', words[0]).toList();
-  console.log("first word:" +  JSON.stringify(v1[0]) );
+  let v1 = await g.V().has('word', 'name', words[0]).toList()
+  console.log("first word:" +  JSON.stringify(v1[0]) )
 
-  let path = g.V(v1);
+  let path = g.V(v1)
 
   for (var i = 1; i < words.length; i++) {
-      path = path.repeat(__.out().simplePath()).until(__.has('name', words[i]))
+    path = path.repeat(__.out().simplePath()).until(__.has('name', words[i]))
   }
 
-  const result = await path.path().by('name').toList();
-
-  console.log("Result:" +  result );
+  const result = await path.path().by('name').toList()
+  console.log("Result:" +  result )
 
 }
 
 async function run () {
-
   await dropGraph()
 
   await addVertex('I')
@@ -113,23 +97,8 @@ async function run () {
 
   await connections('work')
 
-  await func1('work')
-
-  //const testArray = ['I', 'work', 'now'];
-  const words = ['I', 'work', 'now'];
-  await test(words);
-  /*
-  Path {
-    labels: [ [], [], [], [], [] ],
-    objects: [ 'I', 'will', 'go', 'home', 'now' ] }, -> This phase doesn't contain the word 'work'
-  Path {
-    labels: [ [], [], [], [], [], [] ],
-    objects: [ 'I', 'will', 'go', 'to', 'work', 'now' ] },
-  Path {
-    labels: [ [], [], [], [], [], [], [], [] ],
-    objects: [ 'I', 'will', 'ride', 'my', 'bike', 'to', 'work', 'now' ] }
-  */
-
+  const words = ['I', 'work', 'now']
+  await test(words)
 }
 
 run()
