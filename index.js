@@ -14,52 +14,41 @@ const property = 'name';
 
 
 async function dropGraph () {
-  console.log('Dropping graph...')
-  let result = await g.V().drop().iterate();
-  console.log('Result: %s\n', JSON.stringify(result));
+  await g.V().drop().iterate()
+  console.log('Graph dropped.')
 }
 
 async function addVertex (word) {
-  console.log('Adding vertex...')
-  let result = await g.addV(_label).property('name', word).iterate();
-  console.log('Result: %s\n', JSON.stringify(result));
-}
-
-async function listVertices () {
-  const val = 'name';
-  console.log('Listing vertices...')
-  let result =  await g.V().values(val).toList();
-  console.log('Result: %s\n', JSON.stringify(result));
-}
-
-async function addEdge (vertice1, vertice2) {
-  console.log('Adding edge...')
-  let relationship = 'connnects';
-
-  const v1 = await g.V().has(property, vertice1).toList();
-  console.log(JSON.stringify(v1));
-  const v2 = await g.V().has(property, vertice2).toList();
-  console.log(JSON.stringify(v2));
-
-  let result = await g.V(v1).addE(relationship).to(g.V(v2)).iterate();
-  console.log('Result: %s\n', JSON.stringify(result));
+  await g.addV(_label).property('name', word).iterate()
+  console.log('Vertex created.')
 }
 
 async function countVertices () {
   console.log('Counting vertices...')
-  let result = await g.V().count().next();
-  console.log('Result: %s\n', JSON.stringify(result));
+  let result = await g.V().count().next()
+  console.log('Result: %s', result.value)
+}
+
+async function listVertices () {
+  const val = 'name'
+  console.log('Listing vertices...')
+  let result =  await g.V().values(val).toList()
+  console.log('Result: %s\n', JSON.stringify(result))
+}
+
+async function addEdge (vertice1, vertice2) {
+  let relationship = 'connnects'
+  const v1 = await g.V().has(property, vertice1).toList()
+  const v2 = await g.V().has(property, vertice2).toList()
+  await g.V(v1).addE(relationship).to(g.V(v2)).iterate()
+  console.log('Edge created.')
 }
 
 async function connections (word) {
-
-  console.log(word)
-  console.log('Getting connections...');
-  const relationship = 'connects';
-
-  const result = await g.V().has('name', word).out().values('name').toList();
-
-  console.log('Result: %s\n', JSON.stringify(result));
+  console.log('Getting connections for %s...', word)
+  // const relationship = 'connects';
+  const result = await g.V().has('name', word).out().values('name').toList()
+  console.log('Result: %s\n', JSON.stringify(result))
 }
 
 async function func1 (word) {
