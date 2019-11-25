@@ -78,6 +78,8 @@ async function run () {
   await addVertex('home')
   await addVertex('now')
 
+  await addVertex('at')
+
   await countVertices()
   await listVertices()
 
@@ -94,6 +96,11 @@ async function run () {
   await addEdge('home', 'now')
   await addEdge('go', 'to')
   await addEdge('work', 'now')
+
+  await addEdge('I', 'work')
+  await addEdge('work', 'at')
+  await addEdge('at', 'home')
+  await addEdge('home', 'now')
 
   await connections('work')
 
