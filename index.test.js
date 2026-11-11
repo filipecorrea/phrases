@@ -6,7 +6,7 @@ const phrases = require('./index')
 const __ = gremlin.process.statics
 
 function steps (traversal) {
-  return traversal.getBytecode().stepInstructions.map(step => step[0])
+  return traversal.getBytecode().stepInstructions
 }
 
 function fakeGraph () {
