@@ -3,109 +3,126 @@ const __ = gremlin.process.statics
 
 const DriverRemoteConnection = gremlin.driver.DriverRemoteConnection
 const traversal = gremlin.process.AnonymousTraversalSource.traversal
-const g = traversal().withRemote(new DriverRemoteConnection('ws://localhost:8182/gremlin'))
 
-const _label = 'word'
+const label = 'word'
 const property = 'name'
+const relationship = 'connnects'
 
-async function dropGraph () {
+function connect (url = 'ws://localhost:8182/gremlin') {
+  return traversal().withRemote(new DriverRemoteConnection(url))
+}
+
+async function dropGraph (g) {
   await g.V().drop().iterate()
   console.log('Graph dropped.\n')
 }
 
-async function addVertex (word) {
-  await g.addV(_label).property('name', word).iterate()
+async function addVertex (g, word) {
+  await g.addV(label).property(property, word).iterate()
   console.log('Vertex created.')
 }
 
-async function countVertices () {
+async function countVertices (g) {
   console.log('Counting vertices...')
-  let result = await g.V().count().next()
+  const result = await g.V().count().next()
   console.log('Result: %s', result.value)
 }
 
-async function listVertices () {
-  const val = 'name'
+async function listVertices (g) {
   console.log('Listing vertices...')
-  let result =  await g.V().values(val).toList()
+  const result = await g.V().values(property).toList()
   console.log('Result: %s\n', JSON.stringify(result))
 }
 
-async function addEdge (vertice1, vertice2) {
-  let relationship = 'connnects'
+async function addEdge (g, vertice1, vertice2) {
   const v1 = await g.V().has(property, vertice1).toList()
   const v2 = await g.V().has(property, vertice2).toList()
   await g.V(v1).addE(relationship).to(g.V(v2)).iterate()
   console.log('Edge created.')
 }
 
-async function connections (word) {
+async function connections (g, word) {
   console.log('Getting connections for %s...', word)
-  const result = await g.V().has('name', word).out().values('name').toList()
+  const result = await g.V().has(property, word).out().values(property).toList()
   console.log('Result: %s\n', JSON.stringify(result))
 }
 
-async function test (words) {
+async function test (g, words) {
   console.log('Testing...')
 
-  let v1 = await g.V().has('word', 'name', words[0]).toList()
-  console.log("first word:" +  JSON.stringify(v1[0]) )
+  const v1 = await g.V().has(label, property, words[0]).toList()
+  console.log('first word:' + JSON.stringify(v1[0]))
 
   let path = g.V(v1)
 
-  for (var i = 1; i < words.length; i++) {
-    path = path.repeat(__.out().simplePath()).until(__.has('name', words[i]))
+  for (let i = 1; i < words.length; i++) {
+    path = path.repeat(__.out().simplePath()).until(__.has(property, words[i]))
   }
 
-  const result = await path.path().by('name').toList()
-  console.log("Result:" +  result )
-
+  const result = await path.path().by(property).toList()
+  console.log('Result:' + result)
 }
 
-async function run () {
-  await dropGraph()
+async function run (g) {
+  await dropGraph(g)
 
-  await addVertex('I')
-  await addVertex('will')
-  await addVertex('ride')
-  await addVertex('my')
-  await addVertex('bike')
-  await addVertex('to')
-  await addVertex('work')
-  await addVertex('tomorrow')
+  await addVertex(g, 'I')
+  await addVertex(g, 'will')
+  await addVertex(g, 'ride')
+  await addVertex(g, 'my')
+  await addVertex(g, 'bike')
+  await addVertex(g, 'to')
+  await addVertex(g, 'work')
+  await addVertex(g, 'tomorrow')
 
-  await addVertex('go')
-  await addVertex('home')
-  await addVertex('now')
+  await addVertex(g, 'go')
+  await addVertex(g, 'home')
+  await addVertex(g, 'now')
 
-  await addVertex('at')
+  await addVertex(g, 'at')
 
-  await countVertices()
-  await listVertices()
+  await countVertices(g)
+  await listVertices(g)
 
-  await addEdge('I', 'will')
-  await addEdge('will', 'ride')
-  await addEdge('ride', 'my')
-  await addEdge('my', 'bike')
-  await addEdge('bike', 'to')
-  await addEdge('to', 'work')
-  await addEdge('work', 'tomorrow')
+  await addEdge(g, 'I', 'will')
+  await addEdge(g, 'will', 'ride')
+  await addEdge(g, 'ride', 'my')
+  await addEdge(g, 'my', 'bike')
+  await addEdge(g, 'bike', 'to')
+  await addEdge(g, 'to', 'work')
+  await addEdge(g, 'work', 'tomorrow')
 
-  await addEdge('will', 'go')
-  await addEdge('go', 'home')
-  await addEdge('home', 'now')
-  await addEdge('go', 'to')
-  await addEdge('work', 'now')
+  await addEdge(g, 'will', 'go')
+  await addEdge(g, 'go', 'home')
+  await addEdge(g, 'home', 'now')
+  await addEdge(g, 'go', 'to')
+  await addEdge(g, 'work', 'now')
 
-  await addEdge('I', 'work')
-  await addEdge('work', 'at')
-  await addEdge('at', 'home')
-  await addEdge('home', 'now')
+  await addEdge(g, 'I', 'work')
+  await addEdge(g, 'work', 'at')
+  await addEdge(g, 'at', 'home')
+  await addEdge(g, 'home', 'now')
 
-  await connections('work')
+  await connections(g, 'work')
 
-  const words = ['I', 'work', 'now']
-  await test(words)
+  await test(g, ['I', 'work', 'now'])
 }
 
-run()
+module.exports = {
+  connect,
+  dropGraph,
+  addVertex,
+  countVertices,
+  listVertices,
+  addEdge,
+  connections,
+  test,
+  run
+}
+
+if (require.main === module) {
+  run(connect()).catch(error => {
+    console.error(error)
+    process.exit(1)
+  })
+}
